@@ -1,0 +1,5 @@
+setting,value
+port_number,7687
+db_name,neo4j
+username,neo4j
+password,neo4j

@@ -133,3 +133,4 @@ dmypy.json
 
 # Raw data files
 /data/raw/
+/settings/personal_settings.csv

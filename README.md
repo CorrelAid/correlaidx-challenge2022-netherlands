@@ -39,3 +39,8 @@ At the time of writing, the dump file uses the indexing structure of Neo4j versi
 So after following the steps, you do have to change the version to 4.X.XX before clicking create. 
 Once created, clicking the open button launches the Neo4j browser where you can run Cypher queries.
 For more intuitive searching/browsing, you can instead click the arrow on _Open_ and use Neo4j Bloom instead.
+
+Using the csv downloads, you can work directly with your preferred data science frameworks.
+However, it is also possible to use Neo4j via Python.
+In the notebooks folder, you can find a notebook demonstrating how to make a connection to the database with Python.
+Note again the need to have version 4 of the driver, i.e. installing a version 4 of the Neo4j python package.
