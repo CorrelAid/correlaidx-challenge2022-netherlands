@@ -1,35 +1,36 @@
 from dash import Dash, dcc, html, Input, Output
-import plotly.express as px
+import dash_leaflet as dl
+import pandas as pd
+import os
 
 app = Dash(__name__)
 
 
 app.layout = html.Div([
-    html.H4('Polotical candidate voting pool analysis'),
-    html.P("Select a candidate:"),
+    html.H4('Dutch Addresses in the Offshore Leaks datasets'),
+    html.P("Select a data leak"),
     dcc.RadioItems(
-        id='choropleth-maps-x-candidate', 
-        options=["Joly", "Coderre", "Bergeron"],
-        value="Coderre",
+        id='nl-map-leak',
+        options=["All", "Paradise Papers", "Offshore Leaks", "Bahamas Leaks", "Pandora Papers ", 'Panama Papers'],
+        value="All",
         inline=True
     ),
-    dcc.Graph(id="choropleth-maps-x-graph"),
+    dl.Map(id="leaflet-map", style={'width': '1000px', 'height': '500px'}, center=[52, 4.88], zoom=10,
+           children=[dl.TileLayer()]),
 ])
 
 
 @app.callback(
-    Output("choropleth-maps-x-graph", "figure"), 
-    Input("choropleth-maps-x-candidate", "value"))
-def display_choropleth(candidate):
-    df = px.data.election() # replace with your own data source
-    geojson = px.data.election_geojson()
-    fig = px.choropleth(
-        df, geojson=geojson, color=candidate,
-        locations="district", featureidkey="properties.district",
-        projection="mercator", range_color=[0, 6500])
-    fig.update_geos(fitbounds="locations", visible=False)
-    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-    return fig
+    Output("leaflet-map", "children"),
+    Input("nl-map-leak", "value"))
+def display_map(leak):
+    nl_data = pd.read_csv(os.path.join("data", "addresses_nl.csv"))
+    nl_data = nl_data.dropna()
+    if leak != "All":
+        nl_data = nl_data[nl_data['leak'] == leak]
+    print(nl_data)
+    markers = [dl.Marker(dl.Tooltip(row["address"]), position=[row["latitude"], row["longitude"]]) for i, row in nl_data.iterrows()]
+    return dl.TileLayer(), dl.LayerGroup(markers)
 
 
 if __name__ == "__main__":
