@@ -24,7 +24,8 @@ def get_names(tx, names: Optional[list[str]] = None) -> set[LeakNode]:
     return nodes
 
 
-def process_names(names, uri=CONFIG["NEO4J_URI"], user=CONFIG["NEO4J_USERNAME"], password=CONFIG["NEO4J_PASSWORD"]):
+def process_names(names: Optional[list[str]] = None, uri=CONFIG["NEO4J_URI"], user=CONFIG["NEO4J_USERNAME"],
+                  password=CONFIG["NEO4J_PASSWORD"]):
     with GraphDatabase.driver(uri, auth=(user, password)) as driver:
         with driver.session(database="neo4j") as session:
             results = session.execute_read(get_names, names=names)
@@ -32,4 +33,4 @@ def process_names(names, uri=CONFIG["NEO4J_URI"], user=CONFIG["NEO4J_USERNAME"],
 
 
 if __name__ == '__main__':
-    process_names(["Macadam", "iQor"])
+    process_names()
