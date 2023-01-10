@@ -1,4 +1,6 @@
 from collections import namedtuple
+from pathlib import Path
+from typing import Optional
 
 from neo4j import GraphDatabase
 from dotenv import dotenv_values
@@ -7,7 +9,9 @@ CONFIG = dotenv_values()
 LeakNode = namedtuple("LeakNode", "name,node_id,score")
 
 
-def get_names(tx, names):
+def get_names(tx, names: Optional[list[str]] = None) -> set[LeakNode]:
+    if not names:
+        names = Path(CONFIG["SEARCH_NAMES_FILE"]).read_text().splitlines()
     query = (
         'CALL db.index.fulltext.queryNodes("Everything_Names", $name) '
         'YIELD node, score '
