@@ -28,7 +28,6 @@ def display_map(leak):
     nl_data = nl_data.dropna()
     if leak != "All":
         nl_data = nl_data[nl_data['leak'] == leak]
-    print(nl_data)
     markers = [dl.Marker(dl.Tooltip(row["address"]), position=[row["latitude"], row["longitude"]]) for i, row in nl_data.iterrows()]
     return dl.TileLayer(), dl.LayerGroup(markers)
 
