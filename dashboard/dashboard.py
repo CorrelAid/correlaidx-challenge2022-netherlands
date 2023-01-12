@@ -25,7 +25,7 @@ app.layout = html.Div([
     Input("nl-map-leak", "value"))
 def display_map(leak):
     nl_data = pd.read_csv(os.path.join("data", "addresses_nl.csv"))
-    nl_data = nl_data.dropna()
+    nl_data = nl_data.dropna(subset=['longitude'])
     if leak != "All":
         nl_data = nl_data[nl_data['leak'] == leak]
     markers = [dl.Marker(dl.Tooltip(row["address"]), position=[row["latitude"], row["longitude"]]) for i, row in nl_data.iterrows()]
