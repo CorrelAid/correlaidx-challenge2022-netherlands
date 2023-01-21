@@ -1,0 +1,4 @@
+dash==2.7.1
+dash_leaflet==0.1.23
+pandas==1.5.2
+gunicorn==20.1.0

@@ -1,9 +1,11 @@
+from flask import Flask
 from dash import Dash, dcc, html, Input, Output
 import dash_leaflet as dl
 import pandas as pd
 import os
 
-app = Dash(__name__)
+server = Flask(__name__)
+app = Dash(__name__, server=server)
 
 
 app.layout = html.Div([
@@ -24,7 +26,7 @@ app.layout = html.Div([
     Output("leaflet-map", "children"),
     Input("nl-map-leak", "value"))
 def display_map(leak):
-    nl_data = pd.read_csv(os.path.join("data", "addresses_nl.csv"))
+    nl_data = pd.read_csv(os.path.join(os.path.dirname(__file__),"data", "addresses_nl.csv"))
     nl_data = nl_data.dropna(subset=['longitude'])
     if leak != "All":
         nl_data = nl_data[nl_data['leak'] == leak]
