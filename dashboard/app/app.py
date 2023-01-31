@@ -31,7 +31,8 @@ app.layout = html.Div([
         dl.Map(id="leaflet-map", style={'width': '1000px', 'height': '500px'}, center=[52, 4.88], zoom=10,
            children=[dl.TileLayer(),
                      dl.GeoJSON(url="/assets/addresses_nl.json", options=dict(filter=geojson_filter),
-                                hideout=filter_options, id='address-markers')]),
+                                hideout=filter_options, children=[dl.Tooltip(id="tooltip")],
+                                id='address-markers')]),
         html.H3(children="Text", id='marker-text')
     ], style={'display': 'flex', 'flex-direction': 'row'})
 ])
@@ -57,6 +58,16 @@ def display_map(leak):
     Input("address-markers", "click_feature"))
 def marker_text(feature):
     if feature is not None:
+        return str(feature['properties']['name'])
+
+
+@app.callback(
+    Output("tooltip", "children"),
+    Input("address-markers", "hover_feature"))
+def marker_text(feature):
+    if feature is None:
+        return None
+    else:
         return str(feature['properties']['name'])
 
 
