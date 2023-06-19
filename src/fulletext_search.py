@@ -15,30 +15,31 @@ LeakNode = namedtuple("LeakNode", "searched_name,found_name,node_id,score")
 
 
 class NameSearchNeo4J(ABC):
-    def __init__(self, search_names: Optional[Iterable[str]] = None):
+    def __init__(self, search_names: Optional[Iterable[str]] = None,):
         if not search_names:
             search_names = Path(CONFIG["SEARCH_NAMES_FILE"]).read_text().splitlines()
         self.search_names: Iterable[str] = search_names
+        uri = CONFIG["NEO4J_URI"],
+        user = CONFIG["NEO4J_USERNAME"],
+        password = CONFIG["NEO4J_PASSWORD"]
+        self.driver = GraphDatabase.driver(uri, auth=(user, password))
 
-    def get_names(self, uri=CONFIG["NEO4J_URI"], user=CONFIG["NEO4J_USERNAME"],
-                      password=CONFIG["NEO4J_PASSWORD"]) -> None:
+    def get_names(self) -> None:
         """
         Search for names using a fulltext index in Neo4J. This function sets up
         the driver and session for interacting with the database.
 
         Names can optionally be passed directly to this function for search, or
         add to a file that will be read in the actual search function.
-
-        :param uri: URI to connect to the database
-        :param user: The username for connecting to the database
-        :param password: The password that goes with the username
         """
         try:
-            with GraphDatabase.driver(uri, auth=(user, password)) as driver:
-                with driver.session(database="neo4j") as session:
-                    session.execute_read(self._get_names)
-        except ServiceUnavailable as exc:
+            with self.driver.session(database="neo4j") as session:
+                session.execute_read(self._get_names)
+        except ServiceUnavailable:
             print("Restart the Neo4J database before running this code.")
+
+    def close(self):
+        self.driver.close()
 
     @abstractmethod
     def _get_names(self, tx) -> Iterable[str]:
@@ -80,21 +81,28 @@ class FuzzyMatchSearch(NameSearchNeo4J):
         )
         self.found_names = defaultdict(set)
 
-    def _get_names(self, tx) -> None:
-        results = tx.run(self.query)
-        for item in results:
+    def get_all_nodes(self, tx):
+        query_results = tx.run(self.query)
+        for item in query_results:
             for attr in self.node_attrs:
                 if attr != "node.node_id" and item[attr] is not None:
                     self.found_names[item[attr]].add(item["node.node_id"])
 
+    def _get_names(self, tx) -> None:
+        self.get_all_nodes(tx)
+
         with open(CONFIG["SEARCH_OUTPUT"], "a", newline="") as csv_file:
-            csv_writer = csv.writer(csv_file, delimiter="|", )
+            csv_writer = csv.writer(csv_file, delimiter="|")
             csv_writer.writerow(LeakNode._fields)
 
             for name in self.search_names:
-                results = extract(name, self.found_names.keys(), scorer=token_set_ratio, score_cutoff=75, )
+                results = extract(name, self.found_names.keys(), scorer=token_set_ratio, score_cutoff=75)
                 csv_writer.writerows(results)
 
 
 if __name__ == '__main__':
-    FuzzyMatchSearch().get_names()
+    neo_search = FuzzyMatchSearch()
+    try:
+        neo_search.get_names()
+    finally:
+        neo_search.close()
